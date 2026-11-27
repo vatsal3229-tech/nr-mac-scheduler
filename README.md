@@ -104,25 +104,4 @@ Linux machine with docker and kind. Results are written to
 [docs/agent_eval.md](docs/agent_eval.md).*
 <!-- EVAL:END -->
 
-## How I used AI coding tools
 
-This project was built in phases with Claude Code as a pair programmer. I
-wrote the specification (domain model, rules, KPIs, test requirements, the
-"never invent numbers" rule), and Claude Code proposed the plans and wrote the
-code. Each step was followed by compiling with `-Werror` and running the tests.
-Things worth noting:
-
-* **Tests as the contract.** The scheduler invariants, the PF-vs-RR-vs-MaxT
-  comparison and the parser rejection cases were written as tests first. Changes
-  were only accepted once those tests ran and passed.
-* **The AI was wrong and the tooling caught it.** Examples from this build:
-  yaml-cpp 0.8.0 failed to compile on a newer GCC (switched to 0.9.0), CMake 4
-  rejected an old dependency's minimum version, `-Wconversion`/`-Wshadow` flagged
-  sloppy test code, and a test fake that aliased a mutable list produced false
-  failures until it snapshotted its inputs.
-* **The agent is evaluated like any other component.** Each injected bug is first
-  confirmed to break the stage that should catch it, so the eval also tests the
-  CI design. The agent is then scored on file and cause, and the score table is
-  generated, not hand-written.
-* I can explain every line. [docs/DESIGN.md](docs/DESIGN.md) records each decision
-  and why.
