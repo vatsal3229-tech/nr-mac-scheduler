@@ -19,7 +19,8 @@ void put_u16(std::vector<uint8_t>& b, uint16_t v) {
   b.push_back(static_cast<uint8_t>(v & 0xFF));
 }
 void put_u32(std::vector<uint8_t>& b, uint32_t v) {
-  for (int shift = 24; shift >= 0; shift -= 8) b.push_back(static_cast<uint8_t>((v >> shift) & 0xFF));
+  for (int shift = 24; shift >= 0; shift -= 8)
+    b.push_back(static_cast<uint8_t>((v >> shift) & 0xFF));
 }
 
 }  // namespace

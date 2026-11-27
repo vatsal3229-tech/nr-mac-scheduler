@@ -77,6 +77,7 @@ jobs:
           path: |
             ci-logs/
             bench/out/results.*
+            bench/out/baseline.json
             bench/out/*.png
 
   arch-check:

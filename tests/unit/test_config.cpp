@@ -38,10 +38,9 @@ TEST(Config, YamlOverridesDefaults) {
 }
 
 TEST(Config, EnvOverridesYaml) {
-  Config c = load_config_from_string("policy: round_robin\ncell:\n  num_prbs: 106\n",
-                                     env_of({{"NRS_POLICY", "max_throughput"},
-                                             {"NRS_NUM_PRBS", "24"},
-                                             {"NRS_UDP_PORT", "5000"}}));
+  Config c = load_config_from_string(
+      "policy: round_robin\ncell:\n  num_prbs: 106\n",
+      env_of({{"NRS_POLICY", "max_throughput"}, {"NRS_NUM_PRBS", "24"}, {"NRS_UDP_PORT", "5000"}}));
   EXPECT_EQ(c.policy, Policy::kMaxThroughput);
   EXPECT_EQ(c.cell.num_prbs, 24);
   EXPECT_EQ(c.udp_port, 5000);

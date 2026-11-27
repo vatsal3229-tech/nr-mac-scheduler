@@ -46,13 +46,14 @@ void SlotLoop::run() {
     const auto t0 = clock::now();
     SlotResult result = cell_.run_slot(scheduler_);
     const auto t1 = clock::now();
-    kpi_.record_slot(result, cell_.ues(), std::chrono::duration<double, std::micro>(t1 - t0).count());
+    kpi_.record_slot(result, cell_.ues(),
+                     std::chrono::duration<double, std::micro>(t1 - t0).count());
     ++slots_;
 
-    hub_.last_slot_ns.store(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                clock::now().time_since_epoch())
-                                .count(),
-                            std::memory_order_relaxed);
+    hub_.last_slot_ns.store(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now().time_since_epoch())
+            .count(),
+        std::memory_order_relaxed);
     if (slots_ % kPublishEverySlots == 1) publish();
 
     const auto now = clock::now();
@@ -86,8 +87,8 @@ void SlotLoop::publish() {
   const auto& ue_bytes = kpi_.ue_bytes();
   for (const UeState& ue : cell_.ues()) {
     auto it = ue_bytes.find(ue.id);
-    s.ues.push_back({ue.id, ue.cqi, ue.buffer_bytes, ue.avg_tput_bps,
-                     it == ue_bytes.end() ? 0 : it->second});
+    s.ues.push_back(
+        {ue.id, ue.cqi, ue.buffer_bytes, ue.avg_tput_bps, it == ue_bytes.end() ? 0 : it->second});
   }
   hub_.publish(std::move(s));
   hub_.ready.store(true);

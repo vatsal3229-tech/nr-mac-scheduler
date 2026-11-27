@@ -172,7 +172,8 @@ def main() -> int:
 
     out = pathlib.Path(a.out)
     meta = {"slots": a.slots, "ues": a.ues, "seed": a.seed}
-    if a.check:
+    base = None
+    if a.check and BASELINE.exists():
         base = json.loads(BASELINE.read_text())
         meta = base["meta"]  # always compare like with like
     rows = run_matrix(a.binary, out, meta["slots"], meta["ues"], meta["seed"])
@@ -188,6 +189,14 @@ def main() -> int:
     if a.update_baseline:
         BASELINE.write_text(json.dumps(to_baseline(rows, meta), indent=2) + "\n")
         print(f"updated {BASELINE}")
+    if a.check and base is None:
+        # Never invent a baseline: emit this run's numbers as a candidate for a
+        # human to review and commit, and fail so the gap is visible.
+        cand = out / "baseline.json"
+        cand.write_text(json.dumps(to_baseline(rows, meta), indent=2) + "\n")
+        print(f"NO BASELINE: {BASELINE} is missing. Review and commit the candidate written to "
+              f"{cand}.", file=sys.stderr)
+        return 1
     if a.check:
         failures = check(rows, base, a.tolerance)
         if failures:

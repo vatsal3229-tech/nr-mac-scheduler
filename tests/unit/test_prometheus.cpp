@@ -12,7 +12,7 @@ TEST(Prometheus, RendersCoreMetricsAndLabels) {
   s.overruns = 3;
   s.kpi.prb_utilization = 0.5;
   s.sched_hist.observe(4);
-  s.ues = {{7, 12, 100, 2.5e6, 4000}};
+  s.ues.push_back({7, 12, 100, 2.5e6, 4000});  // see test_kpi.cpp: GCC 13 + ASan false positive
   ReceiverStats rx;
   rx.datagrams = 10;
   rx.malformed[static_cast<size_t>(wire::ParseError::kBadMagic)] = 2;

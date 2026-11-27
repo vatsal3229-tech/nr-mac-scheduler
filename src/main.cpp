@@ -75,7 +75,8 @@ int run_offline(const nrs::Config& cfg, const Args& args) {
   std::ofstream out(args.out_path);
   if (!out) throw std::runtime_error("cannot write " + args.out_path);
   out << nrs::to_json(k).dump(2) << '\n';
-  std::fprintf(stderr, "offline: policy=%s slots=%llu cell_tput=%.3f Mbps jain=%.4f prb_util=%.4f\n",
+  std::fprintf(stderr,
+               "offline: policy=%s slots=%llu cell_tput=%.3f Mbps jain=%.4f prb_util=%.4f\n",
                k.policy.c_str(), static_cast<unsigned long long>(k.slots),
                k.cell_throughput_bps / 1e6, k.jain_fairness, k.prb_utilization);
   return 0;

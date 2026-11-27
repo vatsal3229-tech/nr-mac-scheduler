@@ -56,7 +56,9 @@ UdpReceiver::UdpReceiver(const std::string& bind_addr, uint16_t port,
 
 UdpReceiver::~UdpReceiver() { stop(); }
 
-void UdpReceiver::start() { thread_ = std::thread([this] { run(); }); }
+void UdpReceiver::start() {
+  thread_ = std::thread([this] { run(); });
+}
 
 void UdpReceiver::stop() {
   if (!thread_.joinable()) return;
@@ -90,8 +92,7 @@ void UdpReceiver::drain_socket() {
     if (len < 0) return;  // EAGAIN: socket drained (level-triggered epoll re-arms)
     datagrams_.fetch_add(1, std::memory_order_relaxed);
     parsed.clear();
-    const wire::ParseError err =
-        wire::parse_datagram(buf.data(), static_cast<size_t>(len), parsed);
+    const wire::ParseError err = wire::parse_datagram(buf.data(), static_cast<size_t>(len), parsed);
     if (err != wire::ParseError::kOk) {
       malformed_[static_cast<size_t>(err)].fetch_add(1, std::memory_order_relaxed);
       continue;

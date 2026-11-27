@@ -23,7 +23,7 @@ std::vector<TraceRow> fading_trace(uint64_t slots, int num_ues, uint32_t seed) {
   std::vector<Ue> ues;
   for (int i = 0; i < num_ues; ++i) {
     const double mean = 3.0 + 10.0 * i / std::max(1, num_ues - 1);  // CQI 3 .. 13
-    const double period = 40.0 + static_cast<double>(rng() % 160);   // 40-199 slots
+    const double period = 40.0 + static_cast<double>(rng() % 160);  // 40-199 slots
     const double phase = 2.0 * kPi * static_cast<double>(rng() % 1000) / 1000.0;
     ues.push_back({mean, 3.0, period, phase});
   }
@@ -32,7 +32,9 @@ std::vector<TraceRow> fading_trace(uint64_t slots, int num_ues, uint32_t seed) {
     for (int i = 0; i < num_ues; ++i) {
       const Ue& u = ues[static_cast<size_t>(i)];
       const double noise = static_cast<double>(static_cast<int>(rng() % 3) - 1);  // -1, 0, +1
-      const double v = u.mean + u.amp * std::sin(2.0 * kPi * static_cast<double>(s) / u.period + u.phase) + noise;
+      const double v = u.mean +
+                       u.amp * std::sin(2.0 * kPi * static_cast<double>(s) / u.period + u.phase) +
+                       noise;
       const auto cqi = static_cast<uint8_t>(std::clamp(std::lround(v), 1L, 15L));
       // 10 kB/slot per UE exceeds what the whole cell can serve: full buffer.
       rows.push_back({s, {static_cast<uint16_t>(i), cqi, 10'000}});

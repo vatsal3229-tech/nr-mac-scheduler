@@ -7,7 +7,7 @@ namespace nrs {
 TEST(Cqi, TableMatchesTs38214Table1) {
   EXPECT_DOUBLE_EQ(cqi_to_efficiency(1), 0.1523);
   EXPECT_DOUBLE_EQ(cqi_to_efficiency(6), 1.1758);
-  EXPECT_DOUBLE_EQ(cqi_to_efficiency(7), 1.4766);  // first 16QAM entry
+  EXPECT_DOUBLE_EQ(cqi_to_efficiency(7), 1.4766);   // first 16QAM entry
   EXPECT_DOUBLE_EQ(cqi_to_efficiency(10), 2.7305);  // first 64QAM entry
   EXPECT_DOUBLE_EQ(cqi_to_efficiency(15), 5.5547);
 }

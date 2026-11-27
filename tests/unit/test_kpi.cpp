@@ -36,7 +36,9 @@ TEST(KpiCollector, ThroughputUtilizationAndUnservedUes) {
   KpiCollector k(10, 0.001);
   std::vector<UeState> ues = {{1, 10, 0, 0}, {2, 10, 0, 0}};
   SlotResult r;
-  r.allocations = {{1, 5, 1000}};
+  // push_back, not "= {{...}}": GCC 13 emits a false-positive -Warray-bounds on
+  // one-element initializer-list assignment under -fsanitize=address.
+  r.allocations.push_back({1, 5, 1000});
   r.prbs_used = 5;
   r.bytes_sent = 1000;
   k.record_slot(r, ues, 3.0);
@@ -57,7 +59,7 @@ TEST(KpiCollector, LatencyWindowIsBounded) {
   KpiCollector k(10, 0.001, 3);
   for (double us : {100.0, 1.0, 2.0, 3.0}) k.record_slot(SlotResult{}, {}, us);
   EXPECT_EQ(k.report().sched_time_p99_us, 3.0);  // the 100 us sample fell out of the window
-  EXPECT_EQ(k.histogram().count(), 4u);           // the histogram keeps everything
+  EXPECT_EQ(k.histogram().count(), 4u);          // the histogram keeps everything
 }
 
 TEST(LatencyHistogram, CumulativeBuckets) {
@@ -78,9 +80,9 @@ TEST(KpiJson, HasExpectedFields) {
   auto j = to_json(k);
   EXPECT_EQ(j["policy"], "round_robin");
   EXPECT_EQ(j["ue_throughput_bps"]["3"], 1.5);
-  for (const char* key : {"cell_throughput_bps", "jain_fairness", "prb_utilization",
-                          "sched_time_p50_us", "sched_time_p99_us", "slot_overruns",
-                          "malformed_packets"}) {
+  for (const char* key :
+       {"cell_throughput_bps", "jain_fairness", "prb_utilization", "sched_time_p50_us",
+        "sched_time_p99_us", "slot_overruns", "malformed_packets"}) {
     EXPECT_TRUE(j.contains(key)) << key;
   }
 }

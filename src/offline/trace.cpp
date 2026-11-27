@@ -54,7 +54,8 @@ std::vector<TraceRow> parse_trace(std::istream& in) {
     r.report.cqi = static_cast<uint8_t>(cqi);
     r.report.new_bytes = field<uint32_t>(cols[3], lineno);
     if (!rows.empty() && r.slot < rows.back().slot) {
-      throw std::runtime_error("trace line " + std::to_string(lineno) + ": slots must not decrease");
+      throw std::runtime_error("trace line " + std::to_string(lineno) +
+                               ": slots must not decrease");
     }
     rows.push_back(r);
   }

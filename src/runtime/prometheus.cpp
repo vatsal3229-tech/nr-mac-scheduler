@@ -70,10 +70,10 @@ std::string render_prometheus(const SlotLoopSnapshot& s, const ReceiverStats& rx
   w.sample("nrs_sched_time_us_sum", s.sched_hist.sum());
   w.sample("nrs_sched_time_us_count", s.sched_hist.count());
 
-  w.metric("nrs_rejected_reports_total", "counter", "Reports dropped by the cell (bad CQI, UE table full).",
-           s.rejected_reports);
-  w.metric("nrs_buffer_overflow_bytes_total", "counter", "Bytes dropped because a UE buffer was full.",
-           s.buffer_overflow_bytes);
+  w.metric("nrs_rejected_reports_total", "counter",
+           "Reports dropped by the cell (bad CQI, UE table full).", s.rejected_reports);
+  w.metric("nrs_buffer_overflow_bytes_total", "counter",
+           "Bytes dropped because a UE buffer was full.", s.buffer_overflow_bytes);
   w.metric("nrs_invariant_violations_total", "counter",
            "Allocations rejected by the cell's safety checks (indicates a scheduler bug).",
            s.invariant_violations);
