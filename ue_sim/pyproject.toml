@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ue_sim"
+version = "0.1.0"
+description = "UE report simulator for nr-mac-scheduler (live UDP and offline trace modes)"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+ue-sim = "ue_sim.cli:main"
+
+[tool.setuptools]
+packages = ["ue_sim"]
