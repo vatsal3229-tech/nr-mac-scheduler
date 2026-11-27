@@ -1,0 +1,12 @@
+diff --git a/src/runtime/concurrent_queue.h b/src/runtime/concurrent_queue.h
+index 8229055..38a7cc7 100644
+--- a/src/runtime/concurrent_queue.h
++++ b/src/runtime/concurrent_queue.h
+@@ -29,7 +29,6 @@ class ConcurrentQueue {
+ 
+   // Moves every queued item into `out` (appending). Returns how many were moved.
+   size_t drain(std::vector<T>& out) {
+-    std::lock_guard<std::mutex> lock(mu_);
+     const size_t n = items_.size();
+     out.insert(out.end(), items_.begin(), items_.end());
+     items_.clear();

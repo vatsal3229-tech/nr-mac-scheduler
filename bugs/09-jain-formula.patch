@@ -1,0 +1,13 @@
+diff --git a/src/kpi/kpi.cpp b/src/kpi/kpi.cpp
+index 5785a0c..9dac8a8 100644
+--- a/src/kpi/kpi.cpp
++++ b/src/kpi/kpi.cpp
+@@ -14,7 +14,7 @@ double jain_index(const std::vector<double>& x) {
+     sum_sq += v * v;
+   }
+   if (sum_sq == 0.0) return 1.0;
+-  return (sum * sum) / (static_cast<double>(x.size()) * sum_sq);
++  return (sum * sum) / (static_cast<double>(x.size() * x.size()) * sum_sq);
+ }
+ 
+ double percentile(std::vector<double> samples, double p) {

@@ -1,0 +1,13 @@
+diff --git a/k8s/10-configmap.yaml b/k8s/10-configmap.yaml
+index 09025c9..28784b2 100644
+--- a/k8s/10-configmap.yaml
++++ b/k8s/10-configmap.yaml
+@@ -9,7 +9,7 @@ data:
+   config.yaml: |
+     policy: proportional_fair
+     cell:
+-      num_prbs: 52
++      num_prb: 52
+       ewma_time_constant_slots: 100
+     network:
+       udp_port: 38472

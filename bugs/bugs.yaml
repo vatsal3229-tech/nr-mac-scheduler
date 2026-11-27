@@ -1,0 +1,76 @@
+# Ground truth for the CI-agent evaluation (tools/ci_agent/eval.py).
+# Each bug is one patch in this directory. `check` is the pipeline stage that
+# should catch it, `file` and `categories` are what a correct diagnosis names,
+# and `keywords` are terms a correct summary is expected to contain (any one).
+- id: 01-prb-rounding
+  title: PRB count rounds down instead of up (off-by-one in PRB allocation)
+  check: unit
+  file: src/phy/cqi_table.cpp
+  categories: [scheduler_logic]
+  keywords: [round, ceil, floor, off-by-one, prbs_for_bytes]
+- id: 02-pf-average-not-updated
+  title: PF average updated on a copy, so it never changes
+  check: unit
+  file: src/core/cell.cpp
+  categories: [scheduler_logic]
+  keywords: [copy, ewma, average, avg_tput]
+- id: 03-queue-data-race
+  title: Queue drain reads the deque without holding the mutex
+  check: tsan
+  file: src/runtime/concurrent_queue.h
+  categories: [concurrency]
+  keywords: [race, lock, mutex]
+- id: 04-parser-byte-order
+  title: Parser reads u16 fields little-endian
+  check: unit
+  file: src/proto/wire.cpp
+  categories: [wire_protocol]
+  keywords: [endian, byte order, byte-order, read_u16, swap]
+- id: 05-readiness-wrong-port
+  title: Readiness probe points at a port the container does not expose
+  check: arch
+  file: k8s/30-cell-statefulset.yaml
+  categories: [kubernetes_manifest]
+  keywords: [readiness, port, 9090]
+- id: 06-memory-limit-oom
+  title: Memory limit far below the scheduler's working set (OOMKilled)
+  check: e2e
+  file: k8s/30-cell-statefulset.yaml
+  categories: [resource_limits, kubernetes_manifest]
+  keywords: [oom, memory, limit]
+- id: 07-configmap-key-typo
+  title: ConfigMap uses num_prb instead of num_prbs
+  check: arch
+  file: k8s/10-configmap.yaml
+  categories: [config, kubernetes_manifest]
+  keywords: [num_prb, typo, key]
+- id: 08-rr-rotation-stuck
+  title: Round-robin never advances its rotation pointer
+  check: unit
+  file: src/sched/round_robin.cpp
+  categories: [scheduler_logic]
+  keywords: [rotat, next_start, remainder, leftover]
+- id: 09-jain-formula
+  title: Jain index divides by n squared
+  check: unit
+  file: src/kpi/kpi.cpp
+  categories: [kpi_math]
+  keywords: [jain, fairness, n^2, squared, size]
+- id: 10-buffer-overdraw
+  title: Greedy fill claims full PRB capacity even when the buffer is smaller
+  check: unit
+  file: src/sched/greedy_fill.cpp
+  categories: [scheduler_logic]
+  keywords: [buffer, min, bytes]
+- id: 11-python-magic-swapped
+  title: Python encoder magic byte-swapped vs the C++ parser and the spec
+  check: arch
+  file: ue_sim/ue_sim/wire.py
+  categories: [wire_protocol]
+  keywords: [magic, 0x524E, 0x4e52, byte]
+- id: 12-overhead-applied-twice
+  title: Cell builds its link model with the overhead doubled (throughput regression)
+  check: perf
+  file: src/core/cell.cpp
+  categories: [performance_regression, scheduler_logic]
+  keywords: [overhead, link, throughput]

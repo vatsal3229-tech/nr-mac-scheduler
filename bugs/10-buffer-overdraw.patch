@@ -1,0 +1,13 @@
+diff --git a/src/sched/greedy_fill.cpp b/src/sched/greedy_fill.cpp
+index b1e0f20..656935c 100644
+--- a/src/sched/greedy_fill.cpp
++++ b/src/sched/greedy_fill.cpp
+@@ -18,7 +18,7 @@ std::vector<Allocation> greedy_fill(const SlotInput& in, const std::vector<size_
+     const uint32_t need = in.link.prbs_for_bytes(ue.cqi, ue.buffer_bytes);
+     const uint32_t give = std::min(need, remaining);
+     // The last PRB is usually only partly filled; never claim more than the buffer holds.
+-    const uint64_t bytes = std::min(ue.buffer_bytes, in.link.bytes_for_prbs(ue.cqi, give));
++    const uint64_t bytes = in.link.bytes_for_prbs(ue.cqi, give);
+     if (bytes == 0) continue;
+     out.push_back({ue.id, give, static_cast<uint32_t>(bytes)});
+     remaining -= give;

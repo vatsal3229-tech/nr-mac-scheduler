@@ -1,0 +1,13 @@
+diff --git a/src/phy/cqi_table.cpp b/src/phy/cqi_table.cpp
+index 09da044..e9aebcb 100644
+--- a/src/phy/cqi_table.cpp
++++ b/src/phy/cqi_table.cpp
+@@ -47,7 +47,7 @@ uint32_t LinkModel::bits_per_prb(uint8_t cqi) const { return cqi <= kMaxCqi ? bi
+ uint32_t LinkModel::prbs_for_bytes(uint8_t cqi, uint64_t bytes) const {
+   const uint64_t bits = bits_per_prb(cqi);
+   if (bits == 0 || bytes == 0) return 0;
+-  const uint64_t need = (bytes * 8 + bits - 1) / bits;
++  const uint64_t need = (bytes * 8) / bits;
+   // Saturate: no cell has more than 275 PRBs, so this cap never binds in practice.
+   return need > UINT32_MAX ? UINT32_MAX : static_cast<uint32_t>(need);
+ }

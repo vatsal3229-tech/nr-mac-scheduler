@@ -1,0 +1,13 @@
+diff --git a/k8s/30-cell-statefulset.yaml b/k8s/30-cell-statefulset.yaml
+index fc23acf..1c85906 100644
+--- a/k8s/30-cell-statefulset.yaml
++++ b/k8s/30-cell-statefulset.yaml
+@@ -59,7 +59,7 @@ spec:
+           readinessProbe:
+             httpGet:
+               path: /readyz
+-              port: http
++              port: 9090
+             periodSeconds: 2
+             failureThreshold: 2
+           securityContext:

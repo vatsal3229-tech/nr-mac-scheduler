@@ -1,0 +1,12 @@
+diff --git a/src/sched/round_robin.cpp b/src/sched/round_robin.cpp
+index 4bb2678..508e16d 100644
+--- a/src/sched/round_robin.cpp
++++ b/src/sched/round_robin.cpp
+@@ -42,7 +42,6 @@ std::vector<Allocation> RoundRobinScheduler::schedule(const SlotInput& in) {
+         if (remaining == 0) break;
+         ++got[k];
+         --remaining;
+-        next_start_id_ = in.ues[active[k]].id + 1u;
+       }
+       break;
+     }

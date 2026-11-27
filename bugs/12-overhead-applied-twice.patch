@@ -1,0 +1,13 @@
+diff --git a/src/core/cell.cpp b/src/core/cell.cpp
+index 43e35e6..84a4232 100644
+--- a/src/core/cell.cpp
++++ b/src/core/cell.cpp
+@@ -6,7 +6,7 @@
+ 
+ namespace nrs {
+ 
+-Cell::Cell(const CellConfig& cfg) : cfg_(cfg), link_(cfg.overhead) {}
++Cell::Cell(const CellConfig& cfg) : cfg_(cfg), link_(cfg.overhead * 2.0) {}
+ 
+ void Cell::reindex() {
+   index_.clear();

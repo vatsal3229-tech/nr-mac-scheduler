@@ -1,0 +1,13 @@
+diff --git a/src/proto/wire.cpp b/src/proto/wire.cpp
+index 18f7ea9..425623e 100644
+--- a/src/proto/wire.cpp
++++ b/src/proto/wire.cpp
+@@ -8,7 +8,7 @@ namespace {
+ // Explicit shifts instead of ntohs/memcpy-casts: independent of host byte
+ // order and alignment, and obviously correct when read.
+ uint16_t read_u16(const uint8_t* p) {
+-  return static_cast<uint16_t>((static_cast<uint16_t>(p[0]) << 8) | p[1]);
++  return static_cast<uint16_t>((static_cast<uint16_t>(p[1]) << 8) | p[0]);
+ }
+ uint32_t read_u32(const uint8_t* p) {
+   return (static_cast<uint32_t>(p[0]) << 24) | (static_cast<uint32_t>(p[1]) << 16) |

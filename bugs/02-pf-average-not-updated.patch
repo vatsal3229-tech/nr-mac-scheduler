@@ -1,0 +1,14 @@
+diff --git a/src/core/cell.cpp b/src/core/cell.cpp
+index 43e35e6..3b5b8fa 100644
+--- a/src/core/cell.cpp
++++ b/src/core/cell.cpp
+@@ -84,7 +84,8 @@ SlotResult Cell::run_slot(Scheduler& scheduler) {
+   const double slot_s = cfg_.slot_duration_s();
+   for (size_t i = 0; i < ues_.size(); ++i) {
+     const double rate = static_cast<double>(served_bits_scratch_[i]) / slot_s;
+-    ues_[i].avg_tput_bps = (1.0 - alpha) * ues_[i].avg_tput_bps + alpha * rate;
++    UeState ue = ues_[i];
++    ue.avg_tput_bps = (1.0 - alpha) * ue.avg_tput_bps + alpha * rate;
+   }
+   return result;
+ }

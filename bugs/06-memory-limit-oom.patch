@@ -1,0 +1,13 @@
+diff --git a/k8s/30-cell-statefulset.yaml b/k8s/30-cell-statefulset.yaml
+index fc23acf..ac8f3b5 100644
+--- a/k8s/30-cell-statefulset.yaml
++++ b/k8s/30-cell-statefulset.yaml
+@@ -48,7 +48,7 @@ spec:
+               memory: 64Mi
+             limits:
+               cpu: 500m
+-              memory: 128Mi
++              memory: 4Mi
+           livenessProbe:
+             httpGet:
+               path: /healthz

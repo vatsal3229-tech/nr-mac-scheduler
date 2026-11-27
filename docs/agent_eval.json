@@ -1,0 +1,77 @@
+[
+  {
+    "id": "01-prb-rounding",
+    "title": "PRB count rounds down instead of up (off-by-one in PRB allocation)",
+    "stage": "unit",
+    "status": "skipped (needs Linux)"
+  },
+  {
+    "id": "02-pf-average-not-updated",
+    "title": "PF average updated on a copy, so it never changes",
+    "stage": "unit",
+    "status": "skipped (needs Linux)"
+  },
+  {
+    "id": "03-queue-data-race",
+    "title": "Queue drain reads the deque without holding the mutex",
+    "stage": "tsan",
+    "status": "skipped (needs Linux)"
+  },
+  {
+    "id": "04-parser-byte-order",
+    "title": "Parser reads u16 fields little-endian",
+    "stage": "unit",
+    "status": "skipped (needs Linux)"
+  },
+  {
+    "id": "05-readiness-wrong-port",
+    "title": "Readiness probe points at a port the container does not expose",
+    "stage": "arch",
+    "detected": true,
+    "status": "detected (agent not run)"
+  },
+  {
+    "id": "06-memory-limit-oom",
+    "title": "Memory limit far below the scheduler's working set (OOMKilled)",
+    "stage": "e2e",
+    "status": "skipped (needs docker + kind)"
+  },
+  {
+    "id": "07-configmap-key-typo",
+    "title": "ConfigMap uses num_prb instead of num_prbs",
+    "stage": "arch",
+    "detected": true,
+    "status": "detected (agent not run)"
+  },
+  {
+    "id": "08-rr-rotation-stuck",
+    "title": "Round-robin never advances its rotation pointer",
+    "stage": "unit",
+    "status": "skipped (needs Linux)"
+  },
+  {
+    "id": "09-jain-formula",
+    "title": "Jain index divides by n squared",
+    "stage": "unit",
+    "status": "skipped (needs Linux)"
+  },
+  {
+    "id": "10-buffer-overdraw",
+    "title": "Greedy fill claims full PRB capacity even when the buffer is smaller",
+    "stage": "unit",
+    "status": "skipped (needs Linux)"
+  },
+  {
+    "id": "11-python-magic-swapped",
+    "title": "Python encoder magic byte-swapped vs the C++ parser and the spec",
+    "stage": "arch",
+    "detected": true,
+    "status": "detected (agent not run)"
+  },
+  {
+    "id": "12-overhead-applied-twice",
+    "title": "Cell builds its link model with the overhead doubled (throughput regression)",
+    "stage": "perf",
+    "status": "skipped (needs Linux)"
+  }
+]
