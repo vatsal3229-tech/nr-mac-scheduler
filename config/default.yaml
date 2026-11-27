@@ -1,0 +1,16 @@
+# Default scheduler configuration. In Kubernetes this file is mounted from a
+# ConfigMap; any key can be overridden by an NRS_* environment variable.
+policy: proportional_fair   # round_robin | proportional_fair | max_throughput
+cell:
+  num_prbs: 52                    # 10 MHz carrier, 15 kHz subcarrier spacing
+  overhead: 0.14                  # fraction of resource elements without user data
+  ewma_time_constant_slots: 100   # PF averaging window
+  slot_duration_us: 1000
+  max_ues: 1024
+  max_buffer_bytes: 4000000
+network:
+  udp_bind: 0.0.0.0
+  udp_port: 38472
+  http_bind: 0.0.0.0
+  http_port: 8080
+  queue_capacity: 65536

@@ -1,0 +1,13 @@
+{
+  "name": "nr-mac-scheduler",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "python3 -m venv .venv && .venv/bin/pip install -e ue_sim pytest matplotlib",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.cmake-tools", "llvm-vs-code-extensions.vscode-clangd", "ms-python.python"]
+    }
+  }
+}

@@ -1,0 +1,3 @@
+# Repo is edited from Windows but built on Linux: force LF so shell scripts and YAML work.
+* text=auto eol=lf
+*.png binary
