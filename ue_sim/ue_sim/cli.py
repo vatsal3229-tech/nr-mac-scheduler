@@ -23,6 +23,20 @@ def write_trace(path: str, name: str, num_ues: int, slots: int, seed: int) -> in
     return rows
 
 
+def resolve(host: str, timeout_s: float = 60.0) -> str:
+    """A headless Service only publishes DNS for *ready* pods, so in Kubernetes
+    the simulator may start before its cell's name exists. Retry instead of crashing."""
+    deadline = time.monotonic() + timeout_s
+    while True:
+        try:
+            return socket.gethostbyname(host)
+        except socket.gaierror:
+            if time.monotonic() > deadline:
+                raise
+            print(f"waiting for DNS {host}", file=sys.stderr)
+            time.sleep(1.0)
+
+
 def run_live(host: str, port: int, name: str, num_ues: int, seed: int, duration_s: float,
              interval_ms: float, first_ue_id: int) -> int:
     """Send reports in real time. Python cannot reliably tick every 1 ms, so it
@@ -30,7 +44,7 @@ def run_live(host: str, port: int, name: str, num_ues: int, seed: int, duration_
     and sends one batch per tick. Bytes are summed and the latest CQI kept per UE."""
     ues = scenario.build(name, num_ues, seed, first_ue_id)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    addr = (socket.gethostbyname(host), port)
+    addr = (resolve(host), port)
     start = time.monotonic()
     slot = 0
     sent = 0

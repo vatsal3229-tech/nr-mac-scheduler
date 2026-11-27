@@ -114,7 +114,55 @@ threads, sockets or sleeping (`src/offline/replay.cpp`).
 
 ## 5. Kubernetes: why a StatefulSet per cell
 
-Covered in Phase 2.
+A scheduler instance **is** a cell. It holds per-UE state (CQI, buffer, PF
+average) for the UEs attached to that cell, and only those. That has three consequences:
+
+1. **Requests must reach a specific instance.** A normal ClusterIP Service
+   load-balances each UDP flow to *some* pod. A UE whose reports landed on
+   cell-1 one moment and cell-0 the next would have its buffer split across two
+   schedulers that each see half the data, and its PF average would be meaningless.
+   Real RAN has the same rule: a UE is attached to one cell at a time, and moving
+   it is an explicit handover, not a load-balancing decision.
+2. **Instances need stable identities.** A StatefulSet gives pods fixed names
+   (`cell-0`, `cell-1`, ...) that survive restarts. A **headless Service**
+   (`clusterIP: None`) gives each one a DNS record,
+   `cell-N.cell.nrs.svc.cluster.local`, with no virtual IP in between. Each
+   simulator Job targets one of these names, like a UE camped on one cell.
+3. **Scaling is adding cells, not adding replicas of a cell.** `replicas: 3`
+   means a third cell with its own UEs. It does not mean more capacity for existing UEs.
+   A Deployment + ClusterIP (the default for stateless web services) would be
+   wrong on all three counts.
+
+No PersistentVolume is used: scheduler state is soft state that UEs rebuild
+within a few report periods after a restart (fresh CQI and buffer reports), so
+a StatefulSet is used for identity, not storage.
+
+**Hardening.** The namespace enforces the Pod Security Standard `restricted`.
+Pods run as non-root (distroless `nonroot`, uid 65532), with a read-only root
+filesystem, all capabilities dropped, no privilege escalation, RuntimeDefault
+seccomp and no service-account token. The scheduler needs none of these
+privileges, and `tools/arch_check.py` fails CI if any manifest loses them.
+
+**Probes.** Liveness is `/healthz`: has the slot loop made progress within 2 s?
+If not, the kubelet restarts the pod. Readiness is `/readyz`: are the sockets bound
+and has the first slot run? Until then the pod's DNS record is not published.
+The simulator retries DNS for this reason.
+
+**Resources.** CPU requests equal limits (500m) so the slot loop is not
+throttled by CFS in bursts. Memory is bounded by design (bounded queue, UE
+table and buffers), so a 128 Mi limit holds with a wide margin. In production
+the DU would be in the Guaranteed QoS class with whole-CPU pinning (CPU Manager
+`static` policy) and an RT kernel. That is out of scope for kind.
+
+**CI pipeline.** Every push runs five independent jobs:
+- unit + live tests with a clang-format check
+- ASan/UBSan and TSan builds of the unit tests
+- the offline performance gate against `bench/baseline.json`, with a 2% tolerance on throughput and fairness
+- `arch_check.py`: manifest policy, ConfigMap keys, kubeconform schema, wire constants
+- kind end-to-end, which proves each cell only sees its own UEs
+
+On failure, each job uploads its log, and e2e also uploads pod logs,
+`kubectl describe` output and events. The Phase 3 agent reads those.
 
 ## 6. Known limitations of this implementation
 

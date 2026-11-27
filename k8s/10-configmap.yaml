@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nrs-config
+  namespace: nrs
+data:
+  # Mounted at /etc/nrs/config.yaml. Unknown keys make the scheduler exit at
+  # startup, so a typo here shows up as CrashLoopBackOff, not as a silent default.
+  config.yaml: |
+    policy: proportional_fair
+    cell:
+      num_prbs: 52
+      ewma_time_constant_slots: 100
+    network:
+      udp_port: 38472
+      http_port: 8080

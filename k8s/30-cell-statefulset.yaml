@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cell
+  namespace: nrs
+spec:
+  serviceName: cell
+  replicas: 2
+  # Cells are independent; start them together instead of one by one.
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: nr-mac-scheduler
+  template:
+    metadata:
+      labels:
+        app: nr-mac-scheduler
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: scheduler
+          image: nr-mac-scheduler:dev
+          imagePullPolicy: IfNotPresent
+          args: ["--config", "/etc/nrs/config.yaml"]
+          ports:
+            - name: ue-reports
+              containerPort: 38472
+              protocol: UDP
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: NRS_CELL_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            # The slot loop is CPU-bound and latency-sensitive. Requests == limits
+            # for CPU avoids CFS throttling surprises; memory is small and flat.
+            requests:
+              cpu: 500m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nrs
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: nrs-config

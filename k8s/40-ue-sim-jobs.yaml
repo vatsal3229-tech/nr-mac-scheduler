@@ -1,0 +1,95 @@
+# One simulator Job per cell. Each targets its cell's stable DNS name, never the
+# Service as a whole: a UE is attached to one cell, and its CQI and buffer state
+# only make sense to that cell's scheduler.
+# UE id ranges differ per cell (0-9, 100-109) so e2e tests can prove routing.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ue-sim-cell-0
+  namespace: nrs
+  labels:
+    app: ue-sim
+    cell: cell-0
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 180
+  template:
+    metadata:
+      labels:
+        app: ue-sim
+        cell: cell-0
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ue-sim
+          image: ue-sim:dev
+          imagePullPolicy: IfNotPresent
+          args: ["live", "--host", "cell-0.cell.nrs.svc.cluster.local", "--port", "38472",
+                 "--scenario", "mixed", "--ues", "10", "--first-ue-id", "0", "--seed", "1",
+                 "--duration", "20"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ue-sim-cell-1
+  namespace: nrs
+  labels:
+    app: ue-sim
+    cell: cell-1
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 180
+  template:
+    metadata:
+      labels:
+        app: ue-sim
+        cell: cell-1
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ue-sim
+          image: ue-sim:dev
+          imagePullPolicy: IfNotPresent
+          args: ["live", "--host", "cell-1.cell.nrs.svc.cluster.local", "--port", "38472",
+                 "--scenario", "mixed", "--ues", "10", "--first-ue-id", "100", "--seed", "2",
+                 "--duration", "20"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]

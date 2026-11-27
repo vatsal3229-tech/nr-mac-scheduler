@@ -1,0 +1,157 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PY: python3
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y ninja-build clang-format
+          pip install pytest pyyaml matplotlib -e ue_sim
+      - name: Format check, build, unit + live tests
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          { make format-check && make test; } 2>&1 | tee ci-logs/build-test.log
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: ci-logs-build-test, path: ci-logs/ }
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [asan-ubsan, tsan]
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build
+      # TSan's shadow memory layout breaks with the 32-bit mmap ASLR entropy of
+      # recent Ubuntu kernels ("unexpected memory mapping").
+      - if: matrix.preset == 'tsan'
+        run: sudo sysctl vm.mmap_rnd_bits=28
+      - name: Build and test under ${{ matrix.preset }}
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          make unit PRESET=${{ matrix.preset }} 2>&1 | tee ci-logs/${{ matrix.preset }}.log
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: "ci-logs-${{ matrix.preset }}", path: ci-logs/ }
+
+  perf-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: |
+          sudo apt-get update && sudo apt-get install -y ninja-build
+          pip install matplotlib -e ue_sim
+      - name: Offline benchmark vs bench/baseline.json
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          make perf-gate 2>&1 | tee ci-logs/perf-gate.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs-perf-gate
+          path: |
+            ci-logs/
+            bench/out/results.*
+            bench/out/*.png
+
+  arch-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
+            | sudo tar -xz -C /usr/local/bin kubeconform
+          pip install pyyaml pytest
+      - name: Architecture conformance
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          { python3 -m pytest -q tools/tests && python3 tools/arch_check.py --require-schema; } 2>&1 \
+            | tee ci-logs/arch-check.log
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: ci-logs-arch-check, path: ci-logs/ }
+
+  e2e:
+    runs-on: ubuntu-24.04
+    needs: [build-test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: nrs
+          config: tools/kind-config.yaml
+      - name: Build images, deploy, run e2e
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          { make deploy && make e2e; } 2>&1 | tee ci-logs/e2e.log
+      - name: Collect pod logs, describe output, events
+        if: failure()
+        run: make collect-artifacts
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs-e2e
+          path: |
+            ci-logs/
+            artifacts/k8s/
+
+  # Phase 3: on a failed PR run, an LLM agent reads the artifacts above plus
+  # the diff and posts a root-cause comment. Skips cleanly without the secret.
+  ci-agent:
+    runs-on: ubuntu-24.04
+    needs: [build-test, sanitizers, perf-gate, arch-check, e2e]
+    if: failure() && github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/download-artifact@v4
+        with: { path: ci-artifacts, pattern: ci-logs-*, merge-multiple: false }
+      - run: pip install -r tools/ci_agent/requirements.txt
+      - name: Diagnose and comment
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 -m tools.ci_agent \
+            --artifacts ci-artifacts \
+            --base origin/${{ github.base_ref }} \
+            --pr ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }}
