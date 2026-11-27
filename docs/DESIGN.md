@@ -164,7 +164,34 @@ the DU would be in the Guaranteed QoS class with whole-CPU pinning (CPU Manager
 On failure, each job uploads its log, and e2e also uploads pod logs,
 `kubectl describe` output and events. The Phase 3 agent reads those.
 
-## 6. Known limitations of this implementation
+## 6. CI failure agent (Phase 3)
+
+`tools/ci_agent/` is a ReAct loop on the Claude Messages API (`claude-opus-5-5`).
+In each turn the model reasons, calls one or more tools, and gets the results back.
+It finishes by calling `submit_diagnosis`, a tool with a strict JSON schema
+(file, line, category, evidence, patch, confidence). That way the output is
+structured data, not prose that has to be parsed.
+
+| Decision | Why |
+|---|---|
+| Hand-written loop, not the SDK tool runner | The limits are the point: every turn counts against `max_iterations` (15) and a total token budget (400k). The loop decides when to stop. On the last turn it tells the model to submit. |
+| Only read-only tools (`list_artifacts`, `read_ci_artifact`, `git_diff`, `read_file`, `grep_repo`) confined to the repo and artifact dirs | Logs and diffs come from the PR under test, so they are untrusted. A prompt-injected model can at worst read files it was already allowed to read. The system prompt also tells it never to follow instructions in data. |
+| Tool output capped at 12k chars, with paging (`offset`) and regex filtering (`pattern`) | CI logs are long and repetitive. Filtering for `FAILED|error|OOMKilled` first keeps context small, and paging means nothing is unreachable. |
+| `git_diff` against the merge base | Shows exactly the change under test, which is where a regression almost always lives. |
+| `strict: true` schemas on every tool | Inputs are guaranteed to match the schema, so the dispatcher needs no defensive parsing. |
+| Adaptive thinking, effort `high`, server-side refusal fallback | Diagnosis is reasoning-heavy, and a refusal is retried on a fallback model rather than failing the job. |
+| Skips with exit 0 when `ANTHROPIC_API_KEY` is absent | Forked PRs have no secrets, and the analysis is advisory, so it must never turn a run red by itself. |
+| PR comment, not auto-commit | A suggested patch is a hypothesis. A human applies it. |
+
+**Evaluation.** `bugs/` holds 12 patches, one injected bug each, with ground truth in
+`bugs/bugs.yaml`. `python -m tools.ci_agent.eval` applies each patch in a fresh
+worktree, runs the stage that should catch it (unit, TSan, arch check, perf gate
+or e2e), checks that the stage fails, then runs the agent on the captured logs. A
+diagnosis is correct only with the right file **and** the right cause. Results
+go in `docs/agent_eval.md`. The first half of this, "does the pipeline catch the
+bug?", is itself a test of the CI design.
+
+## 7. Known limitations of this implementation
 
 * Throughput, fairness and utilization on `/metrics` are cumulative since start, not windowed.
   Use PromQL `rate()` on the `_total` counters for windowed rates.
