@@ -120,6 +120,22 @@ def plot(rows: list[dict], path: pathlib.Path) -> None:
     print(f"wrote {path}")
 
 
+def update_readme(out: pathlib.Path) -> None:
+    """Replace the README benchmark section with this run's table and plot."""
+    readme = ROOT / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    begin, end = "<!-- BENCH:BEGIN -->", "<!-- BENCH:END -->"
+    table = (out / "results.md").read_text(encoding="utf-8")
+    plot = ROOT / "docs" / "throughput_vs_fairness.png"
+    if (out / "throughput_vs_fairness.png").exists():
+        plot.write_bytes((out / "throughput_vs_fairness.png").read_bytes())
+    body = (f"{begin}\nFrom `make bench` (offline replay, deterministic; scheduling times are "
+            f"machine-dependent).\n\n{table}\n![Throughput vs fairness](docs/{plot.name})\n{end}")
+    head, rest = text.split(begin, 1)
+    readme.write_text(head + body + rest.split(end, 1)[1], encoding="utf-8", newline="\n")
+    print(f"updated {readme}")
+
+
 def to_baseline(rows: list[dict], meta: dict) -> dict:
     return {"meta": meta,
             "results": {f"{r['scenario']}/{r['policy']}": {k: r[k] for k in GATED} for r in rows}}
@@ -151,6 +167,7 @@ def main() -> int:
     ap.add_argument("--tolerance", type=float, default=0.02)
     ap.add_argument("--update-baseline", action="store_true")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--readme", action="store_true", help="write the results table into README.md")
     a = ap.parse_args()
 
     out = pathlib.Path(a.out)
@@ -166,6 +183,8 @@ def main() -> int:
     if any(r["invariant_violations"] for r in rows):
         print("FAIL: scheduler produced invalid allocations", file=sys.stderr)
         return 1
+    if a.readme:
+        update_readme(out)
     if a.update_baseline:
         BASELINE.write_text(json.dumps(to_baseline(rows, meta), indent=2) + "\n")
         print(f"updated {BASELINE}")

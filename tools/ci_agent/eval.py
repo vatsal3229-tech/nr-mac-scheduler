@@ -149,8 +149,8 @@ def write_report(rows: list[dict]) -> None:
         lines.append(f"| {r['id']} | {r['stage']} | {r['status']} | {r.get('agent_file') or ''} | "
                      f"{r.get('agent_category') or ''} | {ok} | {r.get('iterations') or ''} | "
                      f"{r.get('tokens') or ''} |")
-    OUT_MD.write_text("\n".join(lines) + "\n")
-    OUT_JSON.write_text(json.dumps(rows, indent=2) + "\n")
+    OUT_MD.write_text("\n".join(lines) + "\n", newline="\n")
+    OUT_JSON.write_text(json.dumps(rows, indent=2) + "\n", newline="\n")
     print(f"wrote {OUT_MD}")
 
 
